@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fffafc;
+
+  --foreground: #3f3f46;
+
+  --lavender: #ede7ff;
+
+  --pink: #f9e3ec;
+
+  --accent: #9b8cd6;
+}
+
+body {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      #fde8f1,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      #eee8ff,
+      transparent 35%
+    ),
+    #fffdfd;
+
+  color: #3f3f46;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.font-caveat {
+  font-family: var(--font-caveat);
+}
+
+.font-newsreader {
+  font-family: var(--font-newsreader);
+}
+
+.font-inter {
+  font-family: var(--font-inter);
+}
+
+.font-sacramento {
+  font-family: var(--font-sacramento);
+}
+
+.font-patrick {
+  font-family: var(--font-patrick);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-hide::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  background: #ddd6ca;
+  border-radius: 999px;
+}
+
+.scrollbar-hide {
+  scrollbar-width: thin;
+  scrollbar-color: #ddd6ca transparent;
+}
