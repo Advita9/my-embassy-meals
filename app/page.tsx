@@ -1,12 +1,42 @@
+"use client";
+
+import { useState } from "react";
 import RecipeCard from "../components/RecipeCard";
 import { recipes } from "@/data/recipes";
 import ScrapbookDecorations from "@/components/ScrapbookDecorations";
 import PressedFlower from "@/components/PressedFlower";
 import PressedFlowerMini from "@/components/PressedFlowerMini";
+import PlateButton from "@/components/PlateButton";
+import PlatePickerModal from "@/components/PlatePickerModal";
+
+
+
+import { Recipe } from "@/data/recipes";
 
 export default function Home() {
+
+  const [showPlatePicker, setShowPlatePicker] =
+    useState(false);
+
+  const [pickedRecipe, setPickedRecipe] =
+    useState<Recipe | null>(null);
+
+  const pickRecipe = () => {
+    const randomRecipe =
+      recipes[Math.floor(Math.random() * recipes.length)];
+
+    setPickedRecipe(randomRecipe);
+    setShowPlatePicker(true);
+  };
+
+    
+
+  
   return (
     <main className="min-h-screen">
+      
+
+
 
       <ScrapbookDecorations />
 
@@ -75,15 +105,30 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
 
           {recipes.map((recipe) => (
-            <RecipeCard
+            <div
               key={recipe.id}
-              recipe={recipe}
-            />
+              id={`recipe-${recipe.id}`}
+            >
+              <RecipeCard recipe={recipe} />
+            </div>
           ))}
 
         </div>
 
+        
+
       </div>
+
+      <PlateButton onClick={pickRecipe} />
+
+      {showPlatePicker && (
+        <PlatePickerModal
+  recipe={pickedRecipe}
+  allRecipes={recipes}
+  onClose={() => setShowPlatePicker(false)}
+  onPickAgain={pickRecipe}
+/>
+      )}
 
     </main>
   );
