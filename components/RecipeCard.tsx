@@ -110,6 +110,7 @@ export default function RecipeCard({
               text-[#2d2d38]
             "
           >
+            
             {recipe.emoji} {recipe.name}
           </h2>
 
