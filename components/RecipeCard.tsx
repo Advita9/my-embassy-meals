@@ -92,7 +92,15 @@ export default function RecipeCard({
 
           {/* image */}
 
-          <div className="h-56 rounded-2xl bg-zinc-100" />
+          <div className="h-56 overflow-hidden rounded-2xl bg-zinc-100">
+  {recipe.image_url ? (
+    <img
+      src={recipe.image_url}
+      alt={recipe.name}
+      className="h-full w-full object-cover"
+    />
+  ) : null}
+</div>
 
           {/* title */}
 

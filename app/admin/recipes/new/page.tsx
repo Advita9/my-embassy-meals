@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
+import ImageCropper from "@/components/ImageCropper";
 
 export default function NewRecipePage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function NewRecipePage() {
   const [error, setError] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [cropImage, setCropImage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -256,36 +258,34 @@ export default function NewRecipePage() {
     recipe image
   </label>
 
+  {imagePreview && (
+    <div className="mb-4 overflow-hidden rounded-2xl border border-zinc-200">
+      <img
+        src={imagePreview}
+        alt="Recipe preview"
+        className="h-56 w-full object-cover"
+      />
+    </div>
+  )}
+
   <input
     type="file"
     accept="image/jpeg,image/png,image/webp"
     onChange={(e) => {
-      const file = e.target.files?.[0] ?? null;
+      const file = e.target.files?.[0];
 
-      setImageFile(file);
+      if (!file) return;
 
-      if (file) {
-        setImagePreview(URL.createObjectURL(file));
-      } else {
-        setImagePreview("");
-      }
+      const imageUrl = URL.createObjectURL(file);
+
+      setCropImage(imageUrl);
     }}
     className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 font-inter text-sm"
   />
 
   <p className="mt-1 font-inter text-xs text-zinc-400">
-    JPG, PNG or WebP
+    JPG, PNG or WebP · crop to fit your recipe card
   </p>
-
-  {imagePreview && (
-    <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-200">
-      <img
-        src={imagePreview}
-        alt="Recipe preview"
-        className="h-64 w-full object-cover"
-      />
-    </div>
-  )}
 </div>
 
           {error && (
@@ -306,6 +306,19 @@ export default function NewRecipePage() {
         </form>
         
       </div>
+      {cropImage && (
+  <ImageCropper
+    image={cropImage}
+    onCancel={() => {
+      setCropImage(null);
+    }}
+    onCropComplete={(file) => {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setCropImage(null);
+    }}
+  />
+)}
     </main>
   );
 }

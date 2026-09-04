@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
+import ImageCropper from "@/components/ImageCropper";
+
 
 type Recipe = {
   id: number;
@@ -38,6 +40,9 @@ export default function EditRecipePage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const [deletingImage, setDeletingImage] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
     async function loadRecipe() {
@@ -74,6 +79,58 @@ export default function EditRecipePage() {
     loadRecipe();
   }, [id]);
 
+  const handleDeleteImage = async () => {
+  if (!existingImageUrl) return;
+
+  const confirmed = window.confirm(
+    "Delete this recipe image? This cannot be undone."
+  );
+
+  if (!confirmed) return;
+
+  setDeletingImage(true);
+
+  try {
+    // Extract the Storage path from the public URL
+    const marker = "/storage/v1/object/public/recipe-images/";
+
+    if (!existingImageUrl.includes(marker)) {
+      throw new Error("Could not determine the image storage path.");
+    }
+
+    const filePath = existingImageUrl.split(marker)[1];
+
+    // Delete from Supabase Storage
+    const { error: storageError } = await supabase.storage
+      .from("recipe-images")
+      .remove([filePath]);
+
+    if (storageError) {
+      throw storageError;
+    }
+
+    // Remove URL from the recipe
+    const { error: databaseError } = await supabase
+      .from("recipes")
+      .update({ image_url: null })
+      .eq("id", id);
+
+    if (databaseError) {
+      throw databaseError;
+    }
+
+    setExistingImageUrl(null);
+    setImagePreview(null);
+    setImageFile(null);
+
+  } catch (error) {
+    console.error("Failed to delete image:", error);
+    alert("Could not delete the image. Please try again.");
+  } finally {
+    setDeletingImage(false);
+  }
+};
+
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
@@ -84,33 +141,32 @@ export default function EditRecipePage() {
 
   let imageUrl = existingImageUrl;
 
-  // Upload new image if one was selected
-  if (imageFile) {
-    const fileExtension = imageFile.name.split(".").pop() || "jpg";
+if (imageFile) {
+  const fileExtension = imageFile.name.split(".").pop() || "jpg";
 
-    const filePath = `${id}/${crypto.randomUUID()}.${fileExtension}`;
+  const filePath = `${id}/${crypto.randomUUID()}.${fileExtension}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("recipe-images")
-      .upload(filePath, imageFile, {
-        contentType: imageFile.type,
-        upsert: false,
-      });
+  const { error: uploadError } = await supabase.storage
+    .from("recipe-images")
+    .upload(filePath, imageFile, {
+      contentType: imageFile.type,
+      upsert: false,
+    });
 
-    if (uploadError) {
-      setError(`Could not upload image: ${uploadError.message}`);
-      setSaving(false);
-      return;
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage
-      .from("recipe-images")
-      .getPublicUrl(filePath);
-
-    imageUrl = publicUrl;
+  if (uploadError) {
+    setError(`Could not upload image: ${uploadError.message}`);
+    setSaving(false);
+    return;
   }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage
+    .from("recipe-images")
+    .getPublicUrl(filePath);
+
+  imageUrl = publicUrl;
+}
 
   const { error: updateError } = await supabase
     .from("recipes")
@@ -337,41 +393,44 @@ export default function EditRecipePage() {
             </div>
           )}
           <div>
-  <label className="mb-2 block font-inter text-sm text-zinc-600">
-    recipe image
+  <label className="mb-2 block text-sm font-medium">
+    Recipe image
   </label>
 
   {(imagePreview || existingImageUrl) && (
-    <div className="mb-4 overflow-hidden rounded-2xl border border-zinc-200">
+    <div className="mb-3">
       <img
         src={imagePreview || existingImageUrl || ""}
-        alt={name || "Recipe image"}
-        className="h-64 w-full object-cover"
+        alt="Recipe preview"
+        className="h-56 w-full max-w-md rounded-2xl object-cover"
       />
     </div>
   )}
 
+  {existingImageUrl && !imagePreview && (
+    <button
+      type="button"
+      onClick={handleDeleteImage}
+      disabled={deletingImage}
+      className="mb-3 rounded-full border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+    >
+      {deletingImage ? "Deleting..." : "Delete image"}
+    </button>
+  )}
+
   <input
     type="file"
-    accept="image/jpeg,image/png,image/webp"
+    accept="image/*"
     onChange={(e) => {
-      const file = e.target.files?.[0] ?? null;
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-      setImageFile(file);
-
-      if (file) {
-        setImagePreview(URL.createObjectURL(file));
-      } else {
-        setImagePreview("");
-      }
+      const imageUrl = URL.createObjectURL(file);
+      setCropImage(imageUrl);
     }}
-    className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 font-inter text-sm"
   />
-
-  <p className="mt-1 font-inter text-xs text-zinc-400">
-    Choose a new image to replace the current one. JPG, PNG or WebP.
-  </p>
 </div>
+
 
           {/* ACTIONS */}
 
@@ -394,6 +453,20 @@ export default function EditRecipePage() {
           </div>
         </form>
       </div>
+
+      {cropImage && (
+      <ImageCropper
+        image={cropImage}
+        onCancel={() => {
+          setCropImage(null);
+        }}
+        onCropComplete={(file) => {
+          setImageFile(file);
+          setImagePreview(URL.createObjectURL(file));
+          setCropImage(null);
+        }}
+      />
+    )}
     </main>
   );
 }
