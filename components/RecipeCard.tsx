@@ -36,8 +36,10 @@ export default function RecipeCard({
       <div
         className={`
           relative
-          w-[360px]
+          w-full
+          max-w-[360px]
           h-[470px]
+          mx-auto
 
           transition-transform
           duration-700
@@ -272,7 +274,7 @@ export default function RecipeCard({
           <div
             className="
               mt-3
-              h-2px
+              h-[2px]
               bg-[#3a3a3a]
             "
           />
@@ -389,28 +391,7 @@ export default function RecipeCard({
   </div>
 )}
 
-          {recipe.ingredients.length > 5 && (
-  <div
-    className="
-      absolute
-      bottom-4
-      left-1/2
-      -translate-x-1/2
-
-      font-caveat
-      text-lg
-
-      font-caveat
-        text-[1.5rem]
-
-        text-[#9b8cd6]
-
-        opacity-90
-    "
-  >
-    
-  </div>
-)}
+          
         </div>
       </div>
     </div>
