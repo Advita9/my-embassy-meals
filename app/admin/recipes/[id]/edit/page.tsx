@@ -38,7 +38,7 @@ export default function EditRecipePage() {
   const [ingredients, setIngredients] = useState("");
   const [note, setNote] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [cropImage, setCropImage] = useState<string | null>(null);
   const [deletingImage, setDeletingImage] = useState(false);
