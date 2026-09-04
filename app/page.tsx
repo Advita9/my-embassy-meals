@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RecipeCard from "../components/RecipeCard";
+import { supabase } from "@/lib/supabase";
 import { recipes } from "@/data/recipes";
 import ScrapbookDecorations from "@/components/ScrapbookDecorations";
 import PressedFlower from "@/components/PressedFlower";
@@ -23,6 +24,31 @@ export default function Home() {
   const [pickedRecipe, setPickedRecipe] =
     useState<Recipe | null>(null);
 
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadRecipes() {
+      const { data, error } = await supabase
+        .from("recipes")
+        .select("*")
+        .order("id");
+
+      if (error) {
+        console.error("Error loading recipes:", error);
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      setRecipes(data as Recipe[]);
+      setLoading(false);
+    }
+
+    loadRecipes();
+  }, []);
+
   const pickRecipe = () => {
     const randomRecipe =
       recipes[Math.floor(Math.random() * recipes.length)];
@@ -30,6 +56,26 @@ export default function Home() {
     setPickedRecipe(randomRecipe);
     setShowPlatePicker(true);
   };
+
+  if (loading) {
+  return (
+    <main className="min-h-screen flex items-center justify-center">
+      <p className="font-caveat text-2xl text-zinc-500">
+        fetching recipes...
+      </p>
+    </main>
+  );
+}
+
+if (error) {
+  return (
+    <main className="min-h-screen flex items-center justify-center">
+      <p className="font-caveat text-2xl text-red-400">
+        couldn't load the recipes :(
+      </p>
+    </main>
+  );
+}
 
     
 
