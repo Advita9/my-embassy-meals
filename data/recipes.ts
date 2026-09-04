@@ -11,7 +11,7 @@ export interface Recipe {
   rotation: string;
   tapeColor: string;
   ingredients: string[];
-  
+  image_url?: string | null;
 }
 
 export const recipes: Recipe[] = [
